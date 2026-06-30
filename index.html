@@ -64,10 +64,10 @@ button {
 
 .song-frame {
   position: fixed;
-  top: -240px;
-  left: -320px;
-  width: 220px;
-  height: 124px;
+  top: -280px;
+  left: -360px;
+  width: 320px;
+  height: 200px;
   opacity: 0;
   pointer-events: none;
 }
@@ -849,7 +849,8 @@ const topButton = document.querySelector("#topButton");
 const musicToggle = document.querySelector("#musicToggle");
 const musicStatus = document.querySelector("#musicStatus");
 const songFrame = document.querySelector("#song-player");
-const songBaseUrl = `https://www.youtube.com/embed/${VIDEO_ID}?enablejsapi=1&loop=1&playlist=${VIDEO_ID}&playsinline=1&controls=0&rel=0&modestbranding=1`;
+const songOrigin = encodeURIComponent(window.location.origin);
+const songBaseUrl = `https://www.youtube.com/embed/${VIDEO_ID}?enablejsapi=1&loop=1&playlist=${VIDEO_ID}&playsinline=1&controls=0&rel=0&modestbranding=1&origin=${songOrigin}`;
 const songAutoplayUrl = `${songBaseUrl}&autoplay=1`;
 const songMutedAutoplayUrl = `${songAutoplayUrl}&mute=1`;
 
@@ -964,6 +965,7 @@ function startSongWithAudio() {
     player.unMute();
     player.setVolume(76);
     player.playVideo();
+    setMusicState(true, "Song playing");
   } catch (error) {
     refreshSongFrame(false);
   }
@@ -1062,6 +1064,7 @@ window.setTimeout(() => {
   }
 }, 2600);
 
+refreshSongFrame(true);
 renderReasons();
 updateScrollProgress();
 
