@@ -14,6 +14,8 @@ const musicToggle = document.querySelector("#musicToggle");
 const musicStatus = document.querySelector("#musicStatus");
 const songAudio = document.querySelector("#song-player");
 
+const AUTOPLAY_RETRY_DELAYS = [0, 180, 600, 1400, 2600, 4200];
+
 let songPlaying = false;
 let audioUnlocked = false;
 let visibleReasons = INITIAL_REASON_COUNT;
@@ -123,14 +125,31 @@ async function startSongWithAudio() {
   }
 }
 
-async function tryAutoplaySong() {
+async function tryAutoplaySong(statusText = "Song is starting") {
   if (!songAudio) {
     return;
   }
 
+  songAudio.autoplay = true;
+  songAudio.defaultMuted = false;
+  songAudio.muted = false;
   songAudio.volume = 0.82;
-  await songAudio.play().catch(() => {
+  musicStatus.textContent = statusText;
+
+  await songAudio.play().then(() => {
+    setMusicState(true, "Song playing");
+  }).catch(() => {
     setMusicState(false, "Tap anywhere for song");
+  });
+}
+
+function scheduleAutoplayAttempts() {
+  AUTOPLAY_RETRY_DELAYS.forEach((delay) => {
+    window.setTimeout(() => {
+      if (!songPlaying) {
+        tryAutoplaySong();
+      }
+    }, delay);
   });
 }
 
@@ -181,6 +200,13 @@ document.addEventListener("pointerdown", unlockAudioFromFirstInteraction, {
   passive: true,
 });
 document.addEventListener("keydown", unlockAudioFromFirstInteraction, { once: true });
+window.addEventListener("load", () => tryAutoplaySong());
+window.addEventListener("pageshow", () => tryAutoplaySong());
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && !songPlaying) {
+    tryAutoplaySong();
+  }
+});
 window.addEventListener("scroll", updateScrollProgress, { passive: true });
 window.addEventListener("resize", updateScrollProgress);
 
@@ -191,5 +217,6 @@ window.setTimeout(() => {
 }, 2600);
 
 tryAutoplaySong();
+scheduleAutoplayAttempts();
 renderReasons();
 updateScrollProgress();
